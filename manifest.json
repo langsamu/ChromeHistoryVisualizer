@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+
+    "name": "Wikipedia navigation visualizer",
+    "description": "This extension visualizes Wikipedia navigation",
+    "version": "0.1",
+
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'", // For Polymer (eval)
+
+    "browser_action": {
+        "default_icon": "default_icon.png",
+        "default_title": "default_title"
+    },
+    "background": {
+        "persistent": false,
+        "scripts": [
+            "init.js"
+        ]
+    },
+    "permissions": [
+        "history"
+    ]
+}

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <script src="linq.min.js"></script>
+    <script src="util.js"></script>
+    <script src="classes.js"></script>
+    <script src="js.js"></script>
+    <script src="index.js"></script>
+    <script src="d3.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-y: hidden;
+            overflow-x: hidden;
+        }
+
+        fieldset {
+            padding: 10px;
+            margin: 10px;
+            border-top: 1px solid;
+            border-left: 1px solid;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        input[type="checkbox"] {
+            width: 540px;
+            margin: 0;
+            height: 58px;
+            position: absolute;
+            cursor: pointer;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        fieldset > * {
+            display: none;
+        }
+
+        fieldset > legend, input:checked + fieldset > * {
+            display: inherit;
+        }
+    </style>
+    <style>
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .node {
+            font: 10px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <button style="position:absolute">x</button>
+</body>
+</html>

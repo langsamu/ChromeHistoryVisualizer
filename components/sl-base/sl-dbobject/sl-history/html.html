@@ -1,0 +1,25 @@
+<link rel="import" href="../html.html">
+<link rel="import" href="../sl-visit/html.html">
+
+<polymer-element name="sl-history" extends="sl-dbobject">
+    <template>
+        <link href="css.css" rel="stylesheet" />
+        <template bind="{{original as history}}">
+            <div>
+                <!--<img src="{{history.favicon}}" />-->
+                <span>{{history.lastVisitTime | shortenDate}}</span>
+                <a href="{{history.url}}">{{history}}</a>
+                <button on-click="{{onDeleteClick}}">delete</button>
+                <button on-click="{{onVisitsClick}}">visits</button>
+            </div>
+            <ul>
+                <template if="{{showVisits}}" repeat="{{visit in history.visits}}">
+                    <li>
+                        <sl-visit original="{{visit}}" />
+                    </li>
+                </template>
+            </ul>
+        </template>
+    </template>
+    <script src="js.js"></script>
+</polymer-element>

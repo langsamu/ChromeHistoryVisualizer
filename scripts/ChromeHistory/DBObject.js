@@ -1,4 +1,4 @@
-define(function () {
+define([], function () {
     var internals = new WeakMap();
 
     function DBObject(db) {

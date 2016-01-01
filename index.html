@@ -2,35 +2,53 @@
 <html>
 <head>
     <title></title>
-    <link href="styles/fieldset.css" rel="stylesheet" />
-    <link rel="import" href="components/components.html">
     <script data-main="scripts/main" src="scripts/libs/require.js"></script>
     <style>
+        html {
+            height: 100%;
+        }
+
         body {
+            height: 100%;
             margin: 0;
-            o verflow-y: hidden;
-            o verflow-x: hidden;
-        }
-    </style>
-    <style>
-        .node circle {
-            fill: #fff;
-            stroke: steelblue;
-            stroke-width: 1.5px;
         }
 
-        .node {
-            font: 10px sans-serif;
+        ul {
+            height: 50%;
+            border: 1px solid;
+            padding: 0;
+            position: absolute;
+            width: 33%;
+            margin: 0;
+            overflow: scroll;
         }
 
-        .link {
-            fill: none;
-            stroke: #ccc;
-            stroke-width: 1.5px;
+        li {
+            margin-left: 20px;
+        }
+
+        .half {
+        }
+
+        .bottom {
+            top: 50%;
+        }
+
+        .center {
+            left: 33%;
+            height:100%;
+        }
+
+        .right {
+            left: 66%;
         }
     </style>
 </head>
 <body>
-    <sl-x></sl-x>
+    <ul id="referring" class=""></ul>
+    <ul id="current" class="center"></ul>
+    <ul id="all" class="bottom"></ul>
+    <ul id="referred" class="right half"></ul>
+    <ul id="descendants" class="right half bottom"></ul>
 </body>
 </html>

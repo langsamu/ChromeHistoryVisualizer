@@ -7,7 +7,7 @@ define(["util", "ChromeHistory/DBObject"], function (util, DBObject) {
         DBObject.call(this, db)
 
         internals.set(this, {
-            id: original.id,
+            id: Number(original.id),
             lastVisitTime: new Date(original.lastVisitTime),
             title: original.title,
             typedCount: original.typedCount,
@@ -52,7 +52,6 @@ define(["util", "ChromeHistory/DBObject"], function (util, DBObject) {
         }
     });
 
-    //TODO: Why "Not allowed to load local resource"?
     Object.defineProperty(History.prototype, "favicon", {
         get: function () {
             return url("chrome://favicon/size/16@1/" + this.url.href);
@@ -72,8 +71,6 @@ define(["util", "ChromeHistory/DBObject"], function (util, DBObject) {
             }
         }
     });
-
-    //TODO: Add lastVisit?
 
     Object.defineProperty(History.prototype, "visits", {
         get: function () {

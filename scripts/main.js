@@ -1,347 +1,190 @@
-define(["libs/d3", "libs/linq", "ChromeHistory/DB", "ChromeHistory/HistoryQuery", "WikipediaHistory/DB"], function (d3, linq, ChromeDB, HistoryQuery, WikipediaDB) {
+define(["ChromeHistory/DB"], function (DB) {
     "use strict";
 
-    //new ChromeDB().search(new HistoryQuery("", (new Date(0)).getTime(), undefined, 10000), undefined, visitsReady);
-    //new WikipediaDB().search(undefined, visitsReady);
+    var db = new DB;
 
+    //a();
+    //b();
+    a1();
 
-    function visitsReady(db) {
-        //var b = document.querySelector("sl-db");
-        //b.db = this;
-
-        //allArticles();
-        //dropDownTree();
-
-        //path(getHistory("56519"));
-
-        //graphJson(getVisit("121036"));
-        //deepest();
-        //mostDescendants();
-
-
-        //showJourney(getVisit("113351"));
-        //showJourneyUnique(getVisit("115794"));
-    }
-
-    function dropDownTree() {
-        var select = document.createElement("select");
-        document.body.appendChild(select);
-        select.style.position = "absolute";
-        select.style.left = "25px";
-        var option = document.createElement("option");
-        option.text = "";
-        select.appendChild(option);
-
-        select.addEventListener("change", function (e) {
-            var visitId = e.srcElement.value;
-            if (visitId) {
-                var visit = getVisit(visitId);
-
-                var svg = document.body.querySelector("svg");
-                if (svg) {
-                    document.body.removeChild(svg);
-
+    function a1() {
+        var lists = document.getElementsByTagName("ul");
+        for (var i = 0; i < lists.length; i++) {
+            lists[i].addEventListener("click", function (e) {
+                if (this !== e.srcElement) {
+                    a4(e.srcElement.visit);
                 }
-                showJourney(visit);
-
-            }
-        });
-
-        var visits = app.db
-            .uniqueVisits
-            .filter(function (item) {
-                return !item.referringVisit && item.descendants.length > 3
-            })
-            .map(function (item) {
-                var option = document.createElement("option");
-                option.value = item.visitId;
-                option.text = item.history.url.pathname;
-
-                return option;
-            })
-            .forEach(function (item) {
-                select.appendChild(item);
             });
-    }
-
-    function getVisit(visitId) {
-        return app.db.uniqueVisits
-            .filter(function (item) {
-                return item.visitId === visitId;
-            })
-            [0];
-
-    }
-    function getHistory(historyId) {
-        return app.db.history
-            .filter(function (item) {
-                return item.id === historyId
-            })
-            [0];
-
-    }
-    function deepest() {
-        var deepest = Enumerable
-            .From(app.db.uniqueVisits)
-            .Where(function (item) {
-                return item.depth > 5;
-            })
-            .Select(function (item) {
-                return item.path[item.depth - 1]
-            })
-            .OrderByDescending(function (item) {
-                return item.depth;
-            })
-            .Distinct(function (item) {
-                return item.visitId;
-            })
-            .Select(function (item) {
-                return [item].concat(item.descendants).map(function (item) {
-                    return {
-                        id: item.visitId,
-                        depth: item.depth,
-                        name: item.history.article.name
-                    };
-                });
-            })
-            .ToArray();
-        console.log("deepest", deepest);
-    }
-    function mostDescendants() {
-        var mostDescendants = Enumerable
-            .From(app.db.uniqueVisits)
-            .Where(function (item) {
-                return !item.referringVisit;
-            })
-            .OrderByDescending(function (item) {
-                return item.descendants.length;
-            })
-            .Select(function (item) {
-                return [item].concat(item.descendants).map(function (item) {
-                    return {
-                        id: item.visitId,
-                        depth: item.depth,
-                        name: item.history.article.name
-                    };
-                })
-            }).
-            ToArray();
-
-        console.log("mostDescendants", mostDescendants);
-    }
-    function showJourney(visit) {
-        console.log(visit);
-        var data = build(visit);
-
-        showTree([data]);
-
-        function build(visit) {
-            return {
-                name: visit.history.url.pathname + visit.history.url.hash,
-                title: visit.visitId,
-                children: Enumerable
-                    .From(visit.x)
-                    .OrderBy(function (item) {
-                        return item.visitTime;
-                    })
-                    .Select(build)
-                    .ToArray()
-            };
         }
-    }
-    function showJourneyUnique(visit) {
-        var data = build(visit);
 
-        showTree([data]);
-
-        function build(visit) {
-            return {
-                name: visit.history.url.pathname,
-                title: visit.visitId,
-                children: Enumerable
-                    .From(visit.uniqueNoRedirectReferredVisits)
-                    .OrderBy(function (item) {
-                        return item.visitTime;
-                    }).Select(build)
-                    .ToArray()
-            };
-        }
-    }
-
-    function showTree(visits) {
-        var data = {
-            name: "root",
-            children: visits
-        };
-
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-
-        var cluster = d3
-            .layout
-            .tree()
-            .size([height, width - 160]);
-
-        var diagonal = d3
-            .svg
-            .diagonal()
-            .projection(function (d) {
-                return [d.y, d.x];
-            });
-
-        var svg = d3
-            .select("body")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(40,0)");
-
-        var nodes = cluster.nodes(data);
-        var links = cluster.links(nodes);
-
-        var link = svg
-            .selectAll(".link")
-            .data(links)
-            .enter()
-            .append("path")
-            .attr("class", "link")
-            .attr("d", diagonal);
-
-        var node = svg
-            .selectAll(".node")
-            .data(nodes)
-            .enter()
-            .append("g")
-            .attr("class", "node")
-            .attr("transform", function (d) {
-                return "translate(" + d.y + "," + d.x + ")";
-            });
-
-        node
-            .append("circle")
-            .attr("r", 4.5)
-            .append("title").text(function (d) {
-                return d.title
-            });
-
-        node
-            .append("text")
-            .attr("dx", function (d) {
-                return d.children ? -8 : 8;
-            })
-            .attr("dy", 3)
-            .style("text-anchor", function (d) {
-                return d.children ? "end" : "start";
-            })
-            .text(function (d) {
-                return d.name;
-            });
-    }
-
-    function graphJson(visit) {
-        window.result = {
-            nodes: [],
-            links: []
-        };
-
-        var index = 0;
-
-        recurse(index, result, visit);
-
-        window.result.nodes
-            .filter(function (item) {
-                return item.referringVisit;
-            })
-            .forEach(function (item) {
-                window.result.links.push({
-                    source: item.index,
-                    target: item.referringVisit.index
-                });
-            });
-
-        console.log(JSON.stringify(window.result));
-
-        function recurse(index, result, visit) {
-            visit.index = index;
-            index++;
-
-            result.nodes.push(visit);
-
-            visit.referredVisits
-                .forEach(function (referredVisit) {
-                    index = recurse(index, result, referredVisit);
-                });
-
-            return index;
-        }
-    }
-
-    function path(history) {
-        var pathNode = node(document.body, "path");
-
-        history.visits
-            .forEach(function (item) {
-                recurse(item, pathNode);
-            });
-
-        function recurse(visit, parent) {
-            Enumerable
-                .From(visit.referredVisits)
-                .OrderBy(function (item) {
-                    return item.visitTime
-                })
-                .ForEach(function (referred) {
-                    var current = node(parent, referred.history.article.name);
-
-                    recurse(referred, current);
-                });
-        }
-    }
-
-    function allArticles() {
-        var topNode = node(document.body, "all");
-
-        Enumerable
-            .From(app.db.articles)
-            .ForEach(function (article) {
-                var articleNode = node(topNode, "article");
-                node(articleNode, "name", article.name);
-
-                Enumerable
-                    .From(article.history)
-                    .ForEach(function (history) {
-                        var historyNode = node(articleNode, "history");
-                        node(historyNode, "url", history.url);
-
-                        Enumerable
-                            .From(history.visits)
-                            .ForEach(function (visit) {
-                                var visitNode = node(historyNode, "visit");
-                                node(visitNode, "time", new Date(visit.visitTime).toLocaleString());
-                            });
+        db.getAllHistory(function (history) {
+            db.populateHistoryVisits(history, function (history2) {
+                db.visits
+                    .filter(function (item) { return item.depth > 10 }).map(function (item) { return item.root })
+                    //.filter(function (item) { return item.isRoot && item.children.length })
+                    //.filter(function (item) { return item.children.length || item.uniqueChildren.length })
+                    .forEach(function (item) {
+                        a2(item);
                     });
             });
+        });
     }
 
-    function node(parent, name, value) {
-        var checkbox = document.createElement("input");
-        parent.appendChild(checkbox);
-        checkbox.setAttribute("type", "checkbox");
-        //checkbox.setAttribute("checked", "false");
+    function a2(visit) {
+        var all = document.getElementById("all");
+        //clear(referring1);
+        a3(all, visit);
+    }
 
-        var fieldset = document.createElement("fieldset");
-        parent.appendChild(fieldset);
-
-        var legend = document.createElement("legend");
-        fieldset.appendChild(legend);
-        legend.textContent = name;
-
-        if (value) {
-            var valueNode = document.createTextNode(value);
-            fieldset.appendChild(valueNode);
+    function a4(visit) {
+        var referring = document.getElementById("referring");
+        clear(referring);
+        if (visit.parent) {
+            a3(referring, visit.parent);
         }
 
-        return fieldset;
+        var current = document.getElementById("current");
+        clear(current);
+        a3(current, visit);
+
+        var referred = document.getElementById("referred");
+        clear(referred);
+        visit.uniqueChildren.forEach(function (item) {
+            a3(referred, item);
+        });
+
+        var descendants = document.getElementById("descendants");
+        clear(descendants);
+        visit.descendants.forEach(function (item) {
+            a3(descendants, item);
+        });
+    }
+
+    function a3(ul, visit) {
+        var li = document.createElement("li");
+        li.visit = visit;
+        li.textContent = visit.id + " " + (visit.history.title ? visit.history.title : visit.history.url.toString());
+
+        ul.appendChild(li);
+    }
+
+    function clear(ul) {
+        while (ul.firstChild) {
+            ul.removeChild(ul.firstChild);
+        }
+    }
+
+    function aaa(visit) {
+        while (others1.firstChild) {
+            others1.removeChild(others1.firstChild);
+        }
+        while (others2.firstChild) {
+            others2.removeChild(others2.firstChild);
+        }
+
+        visit.referredVisits.forEach(function (item) {
+            var li = document.createElement("li");
+
+            li.addEventListener("click", function () { aaa(item); })
+            li.textContent = item.id + " " + (item.history.title ? item.history.title : item.history.url.toString());
+
+            others1.appendChild(li);
+        });
+        visit.uniqueReferredVisits.forEach(function (item) {
+            var li = document.createElement("li");
+
+            li.addEventListener("click", function () { aaa(item); })
+            li.textContent = item.id + " " + (item.history.title ? item.history.title : item.history.url.toString());
+
+            others2.appendChild(li);
+        });
+    }
+
+    function b() {
+        document.getElementsByTagName("html")[0].style.height = "100%";
+        document.body.style.height = "100%";
+        document.body.style.margin = "0";
+
+        var list = document.createElement("ul");
+        list.id = "list";
+        list.style.height = "100%";
+        list.style.overflow = "scroll";
+        list.style.cssFloat = "left";
+        list.style.width = "200px";
+        list.style.margin = "0";
+        document.body.appendChild(list);
+
+        var others1 = document.createElement("ul");
+        others1.id = "others1";
+        others1.style.height = "100%";
+        others1.style.overflow = "scroll";
+        others1.style.cssFloat = "left";
+        others1.style.width = "200px";
+        others1.style.margin = "0";
+        document.body.appendChild(others1);
+
+        var others2 = document.createElement("ul");
+        others2.id = "others2";
+        others2.style.height = "100%";
+        others2.style.overflow = "scroll";
+        others2.style.cssFloat = "left";
+        others2.style.width = "200px";
+        others2.style.margin = "0";
+        document.body.appendChild(others2);
+
+
+        db.getAllHistory(function (history) {
+            db.populateHistoryVisits(history, function (history2) {
+                db.visits
+                    .filter(function (item) { return item.referredVisits.length || item.uniqueReferredVisits.length })
+                    .forEach(function (item) {
+                        var li = document.createElement("li");
+                        li.addEventListener("click", function () { aaa(item); })
+
+                        li.textContent = item.id + " " + (item.history.title ? item.history.title : item.history.url.toString());
+
+                        list.appendChild(li);
+                    });
+            });
+        });
+    }
+
+    function a() {
+        db.getAllHistory(function (history) {
+            db.populateHistoryVisits(history, function () {
+                console.log(0, history);
+
+                var wikipediaHistory = db.search("https?\:\/\/..\.wikipedia\.org\/wiki\/.+");
+
+                console.log(1, wikipediaHistory);
+
+                var wikipediaVisits = wikipediaHistory
+                    .map(function (item) {
+                        return item.visits
+                    })
+                    .reduce(function (previous, current) {
+                        return previous.concat(current);
+                    });
+
+                console.log(2, wikipediaVisits);
+
+                var roots = wikipediaVisits.filter(function (item) { return !item.referringId });
+
+                console.log(3, roots);
+
+                var interestingVisits = roots.filter(function (item) { return item.descendants.length > 0 });
+
+                console.log(4, interestingVisits);
+            });
+        });
+        //db.search("https?\:\/\/..\.wikipedia\.org\/wiki\/.+", callback);
+        //db.search("https?\:\/\/(www\.)?youtube.com/watch[\?]v=.+", callback);
+        //db.search("google\.com\/.+", callback);
+
+        function callback(result) {
+            console.log(db);
+            //console.log(result.map(function (item) { return item.title}));
+        }
+
     }
 });

@@ -7,11 +7,11 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
         DBObject.call(this, db);
 
         internals.set(this, {
-            id: original.visitId,
-            historyId: original.id,
-            referringId: original.referringVisitId === "0" ? undefined : original.referringVisitId,
+            id: Number(original.visitId),
+            historyId: Number(original.id),
+            parentId: original.referringVisitId === "0" ? null : Number(original.referringVisitId),
             transition: original.transition,
-            visitTime: new Date(original.visitTime)
+            created: new Date(original.visitTime)
         });
     }
 
@@ -27,9 +27,9 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
         }
     });
 
-    Object.defineProperty(Visit.prototype, "referringId", {
+    Object.defineProperty(Visit.prototype, "parentId", {
         get: function () {
-            return internals.get(this).referringId;
+            return internals.get(this).parentId;
         }
     });
 
@@ -39,9 +39,9 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
         }
     });
 
-    Object.defineProperty(Visit.prototype, "visitTime", {
+    Object.defineProperty(Visit.prototype, "created", {
         get: function () {
-            return internals.get(this).visitTime;
+            return internals.get(this).created;
         }
     });
 
@@ -50,47 +50,91 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
             var me = internals.get(this);
 
             if (!me.history) {
-                me.history = this.db.history.filter(historyFilter, this)[0];
+                me.history = this.db
+                    .history
+                    .filter(historyId, this)
+                    [0];
+
+                function historyId(item) {
+                    return item.id === this.historyId;
+                }
             }
 
             return me.history;
-
-            function historyFilter(item) {
-                return item.id === this.historyId;
-            }
         }
     });
 
-    // TODO: doeasn't consider uniqueness
-    Object.defineProperty(Visit.prototype, "referringVisit", {
+    Object.defineProperty(Visit.prototype, "parent", {
         get: function () {
             var me = internals.get(this);
 
-            if (!me.referringVisit) {
-                me.referringVisit = this.db.visits
-                    .filter(function (item) {
-                        return item.id === this.referringId;
-                    }, this)
-                    [0];
+            if (me.parent === undefined) {
+                if (this.isRoot) {
+                    me.parent = null;
+                } else {
+                    me.parent = this.db
+                        .visits
+                        .filter(parentId, this)
+                        [0];
+
+                    function parentId(item) {
+                        return item.id === this.parentId;
+                    }
+                }
             }
 
-            return me.referringVisit;
+            return me.parent;
         }
     });
 
-    Object.defineProperty(Visit.prototype, "referredVisits", {
+    Object.defineProperty(Visit.prototype, "children", {
         get: function () {
             var me = internals.get(this);
 
-            if (!me.referredVisits) {
+            if (!me.children) {
+                me.children = this.db
+                    .visits
+                    .filter(parent, this);
 
-                me.referredVisits = this.db.visits
-                    .filter(function (item) {
-                        return item.referringId === this.id;
-                    }, this);
+                function parent(item) {
+                    return item.parentId === this.id;
+                }
             }
 
-            return me.referredVisits;
+            return me.children;
+        }
+    });
+
+    Object.defineProperty(Visit.prototype, "uniqueChildren", {
+        get: function () {
+            var me = internals.get(this);
+
+            if (!me.uniqueChildren) {
+                var that = this;
+
+                me.uniqueChildren = Enumerable
+                    .From(this.db.visits)
+                    .Where(sameParentAndHistory)
+                    .SelectMany(next)
+                    .GroupBy(historyId)
+                    .Select(first)
+                    .ToArray();
+
+                function sameParentAndHistory(item) {
+                    return item.parentId === that.parentId && item.historyId === that.historyId;
+                }
+                function next(item) {
+                    return item.children;
+                }
+                function historyId(item) {
+                    return item.historyId;
+                }
+                function first(item) {
+                    return item.source[0];
+                }
+            }
+
+            return me.uniqueChildren;
         }
     });
 
@@ -99,111 +143,62 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
             var me = internals.get(this);
 
             if (!me.descendants) {
-                var result = [];
+                me.descendants = this.uniqueChildren.reduce(depthFirst, []);;
 
-                this.uniqueReferredVisits.forEach(function (item) {
-                    result.push(item);
-                    result = result.concat(item.descendants);
-                });
-
-                me.descendants = result;
+                function depthFirst(previous, current) {
+                    return previous.concat([current].concat(current.descendants));
+                }
             }
 
             return me.descendants;
         }
     });
 
-    Object.defineProperty(Visit.prototype, "uniqueReferredVisits", {
-        get: function () {
-            var that = this;
-
-            return Enumerable
-                .From(this.db.visits)
-                .Where(sameReferrerAndHistory)
-                .SelectMany(referredVisits)
-                .GroupBy(historyId)
-                .Select(first)
-                .ToArray()
-
-            function sameReferrerAndHistory(item) {
-                return item.referringId === that.referringId && item.historyId === that.historyId; 
-            }
-            function referredVisits(item) {
-                return item.referredVisits;
-            }
-            function historyId(item) {
-                return item.historyId;
-            }
-            function first(item) {
-                return item.source[0];
-            }
-        }
-    });
-
-    // Like above but also groups by time proximity
-    Object.defineProperty(Visit.prototype, "x", {
+    Object.defineProperty(Visit.prototype, "isRoot", {
         get: function () {
             var me = internals.get(this);
 
-            if (!me.x) {
-                var that = this;
-
-                me.x = Enumerable
-                    .From(this.db.visits)
-                    .Where(function (item) {
-                        //return item.referringVisitId === that.referringVisitId && item.id === that.id; // share referring visit and history item
-
-                        return item.referringId === that.referringId && (item.historyId === that.historyId || urlNoHash(item.history.url) === urlNoHash(that.history.url));
-                    })
-                    .SelectMany(function (item) {
-                        return item.referredVisits;
-                    })
-                    .GroupBy(function (item) {
-                        return item.historyId;
-                    })
-                    .Select(first)
-                    .GroupBy(function (item) {
-                        return Math.floor(item.visitTime / 2000);
-                    })
-                    .Select(first)
-                    .GroupBy(function (item) {
-                        return urlNoHash(item.history.url);
-                    })
-                    .Select(first)
-                    .ToArray();
+            if (me.isRoot === undefined) {
+                me.isRoot = this.parentId === null;
             }
 
-            return me.x;
-
-            function first(item) {
-                return item.source[0];
-            }
-            function urlNoHash(url) {
-                return url.origin + url.pathname + url.search
-            }
+            return me.isRoot;
         }
     });
 
     Object.defineProperty(Visit.prototype, "root", {
         get: function () {
-            if (!this.referringVisit) {
-                return this;
-            } else {
-                return this.referringVisit.root;
+            var me = internals.get(this);
+
+            if (me.Root === undefined) {
+                if (this.isRoot) {
+                    me.root = this;
+                } else {
+                    if (this.parent) {
+                        me.root = this.parent.root;
+                    } else {
+                        me.root = this;
+                    }
+                }
             }
+
+            return me.root;
         }
     });
 
-    // TODO: doeasn't consider uniqueness
     Object.defineProperty(Visit.prototype, "path", {
         get: function () {
             var me = internals.get(this);
 
-            if (!me.path) {
-                if (this.referringVisit) {
-                    me.path = [this.referringVisit].concat(this.referringVisit.path);
-                } else {
+            if (me.path === undefined) {
+                if (this.isRoot) {
                     me.path = [];
+                } else {
+                    if (this.parent) {
+                        me.path = [this.parent].concat(this.parent.path);
+                    } else {
+                        me.path = [];
+                    }
                 }
             }
 
@@ -211,12 +206,11 @@ define(["util", "ChromeHistory/DBObject", "libs/linq"], function (util, DBObject
         }
     });
 
-    // TODO: doeasn't consider uniqueness
     Object.defineProperty(Visit.prototype, "depth", {
         get: function () {
             var me = internals.get(this);
 
-            if (isNaN(me.depth)) {
+            if (me.depth === undefined) {
                 me.depth = this.path.length;
             }
 

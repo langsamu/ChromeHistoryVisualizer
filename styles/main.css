@@ -1,0 +1,16 @@
+﻿path, rect {
+    stroke: black;
+    stroke-width: 0.5;
+}
+
+path {
+    fill: none;
+}
+
+rect {
+    fill: white;
+}
+
+text {
+    dominant-baseline: central;
+}

@@ -19,25 +19,21 @@
             return internals.get(this).id;
         }
     });
-
     Object.defineProperty(History.prototype, "url", {
         get: function () {
             return internals.get(this).url;
         }
     });
-
     Object.defineProperty(History.prototype, "title", {
         get: function () {
             return internals.get(this).title;
         }
     });
-
     Object.defineProperty(History.prototype, "visits", {
         get: function () {
             return internals.get(this).db.visits.byHistory.get(this.id);
         }
     });
-
     Object.defineProperty(History.prototype, "name", {
         get: function () {
             if (this.url.contains(".wikipedia.org/wiki/")) {
@@ -56,7 +52,6 @@
             return this.title;
         }
     });
-
     Object.defineProperty(History.prototype, "clusterKey", {
         get: function () {
             var url = internals.get(this).url;

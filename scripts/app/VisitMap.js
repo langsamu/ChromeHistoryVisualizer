@@ -1,6 +1,6 @@
 ﻿define(["utils"], function () {
     "use strict";
-    
+
     var internals = new WeakMap;
 
     class VisitMap extends Map {
@@ -24,7 +24,6 @@
             return me.byParent;
         }
     });
-
     Object.defineProperty(VisitMap.prototype, "byHistory", {
         get: function () {
             var me = internals.get(this);
@@ -38,7 +37,6 @@
             return me.byHistory;
         }
     });
-
     Object.defineProperty(VisitMap.prototype, "byHistoryAndParent", {
         get: function () {
             var me = internals.get(this);

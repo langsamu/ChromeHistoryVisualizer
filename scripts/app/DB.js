@@ -4,7 +4,7 @@
     var internals = new WeakMap;
 
     class DB {
-        constructor(doneCallback, progressCallback) {
+        constructor(queryText, doneCallback, progressCallback) {
             /// <field name="visits">Visits</field>
             /// <field name="history">History</field>
 
@@ -15,7 +15,7 @@
                 done: doneCallback || noOp
             });
 
-            var query = new HistoryQuery("wikipedia.org/wiki");
+            var query = new HistoryQuery(queryText);
             var callback = saveHistory.bind(this);
 
             chrome.history.search(query, callback);
@@ -69,7 +69,7 @@
 
         if (isLast) {
             normalize.call(this);
-            me.done.call(this);
+            me.done(this);
         };
     }
     function getAndSaveVisits(lastHistoryIndex, query, historyIndex) {

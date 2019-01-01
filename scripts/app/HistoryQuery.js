@@ -6,7 +6,7 @@
             this.text = text || "";
             this.startTime = startTime || (new Date(0)).getTime();
             this.endTime = endTime || (new Date()).getTime();
-            this.maxResults = maxResults || 100000;
+            this.maxResults = maxResults || 99999999;
         }
     }
 });

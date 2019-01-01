@@ -20,31 +20,26 @@
             return internals.get(this).id;
         }
     });
-
     Object.defineProperty(Visit.prototype, "historyId", {
         get: function () {
             return internals.get(this).historyId;
         }
     });
-
     Object.defineProperty(Visit.prototype, "parentId", {
         get: function () {
             return internals.get(this).parentId;
         }
     });
-
     Object.defineProperty(Visit.prototype, "created", {
         get: function () {
             return internals.get(this).created;
         }
     });
-
     Object.defineProperty(Visit.prototype, "isRoot", {
         get: function () {
             return this.parentId === null
         }
     });
-
     Object.defineProperty(Visit.prototype, "parent", {
         get: function () {
             var me = internals.get(this);
@@ -56,7 +51,6 @@
             return me.parent;
         }
     });
-
     Object.defineProperty(Visit.prototype, "root", {
         get: function () {
             var me = internals.get(this);
@@ -68,7 +62,6 @@
             return me.root;
         }
     });
-
     Object.defineProperty(Visit.prototype, "history", {
         get: function () {
             var me = internals.get(this);
@@ -79,7 +72,6 @@
             return me.history;
         }
     });
-
     Object.defineProperty(Visit.prototype, "children", {
         get: function () {
             var me = internals.get(this);
@@ -91,7 +83,6 @@
             return me.children;
         }
     });
-
     Object.defineProperty(Visit.prototype, "historyAndParent", {
         get: function () {
             var me = internals.get(this);
@@ -107,7 +98,6 @@
             return me.historyAndParent;
         }
     });
-
     Object.defineProperty(Visit.prototype, "uniqueChildren", {
         get: function () {
             var me = internals.get(this);
@@ -131,7 +121,6 @@
             return me.uniqueChildren;
         }
     });
-
     Object.defineProperty(Visit.prototype, "descendants", {
         get: function () {
             var me = internals.get(this);

@@ -2,13 +2,15 @@
 <html>
 <head>
     <title></title>
-    <link href="styles/main.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
     <script data-main="scripts/app/main" src="scripts/require.js"></script>
+    <link rel="import" href="scripts/components/index.html" />
 </head>
 <body>
-    <div id="query"></div>
+    <ChromeHistory-Controller progress="progress" query="query" select="visitSelect" tree="visitTree"></ChromeHistory-Controller>
     <progress id="progress" value="0"></progress>
-    <div id="list"></div>
-    <div id="tree"></div>
+    <ChromeHistory-Query id="query"></ChromeHistory-Query>
+    <ChromeHistory-VisitSelect id="visitSelect"></ChromeHistory-VisitSelect>
+    <ChromeHistory-VisitTree id="visitTree" width="1000" height="1000"></ChromeHistory-VisitTree>
 </body>
 </html>

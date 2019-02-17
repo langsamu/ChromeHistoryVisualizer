@@ -1,103 +1,93 @@
-﻿(function (currentScript) {
-    require(["utils"], function () {
-        "use strict";
+﻿import "../../app/utils.js";
 
-        var internals = new WeakMap;
+var internals = new WeakMap;
 
-        class Query extends HTMLElement {
-            createdCallback() {
-                var me = internals.set(this, {}).get(this);
+export default class Query extends HTMLElement {
+    async connectedCallback() {
+        const me = internals.set(this, {}).get(this);
 
-                var shadow = this.createShadowRoot();
+        const response = await fetch("scripts/components/Query/index.html");
 
-                var template = currentScript.ownerDocument.querySelector("template");
-                var clone = document.importNode(template.content, true)
+        const shadow = this.attachShadow({ mode: "closed" });
+        shadow.innerHTML = await response.text();
 
-                shadow.appendChild(clone);
+        me.input = shadow.getElementById("input");
+        me.input.addEventListener("input", onChange.bind(this));
 
-                me.input = shadow.getElementById("input");
-                me.input.addEventListener("input", onChange.bind(this));
+        me.from = shadow.getElementById("from");
+        me.from.addEventListener("input", onChange.bind(this));
 
-                me.from = shadow.getElementById("from");
-                me.from.addEventListener("input", onChange.bind(this));
+        me.to = shadow.getElementById("to");
+        me.to.addEventListener("input", onChange.bind(this));
+    }
 
-                me.to = shadow.getElementById("to");
-                me.to.addEventListener("input", onChange.bind(this));
-            }
-        }
+    get db() {
+        const me = internals.get(this);
 
-        Object.defineProperty(Query.prototype, "db", {
-            get: function () {
-                var me = internals.get(this);
+        return me.db;
+    }
+    set db(value) {
+        const me = internals.get(this);
 
-                return me.db;
-            },
-            set: function (value) {
-                var me = internals.get(this);
+        me.db = value;
 
-                me.db = value;
+        const v = [...this.db.visits.values()].map(v => v.created.getTime()).distinct.sort();
+        const first = v[1];
+        const last = v.last;
 
-                var v = [...this.db.visits.values()].map(v => v.created.getTime()).distinct.sort();
-                var first = v[1];
-                var last = v.last;
+        me.from.min = first;
+        me.from.max = last;
+        me.from.value = first;
 
-                me.from.min = first;
-                me.from.max = last;
-                me.from.value = first;
+        me.to.min = first;
+        me.to.max = last;
+        me.to.value = last;
 
-                me.to.min = first;
-                me.to.max = last;
-                me.to.value = last;
+        onChange.call(this);
+    }
 
-                onChange.call(this);
-            }
-        });
-        Object.defineProperty(Query.prototype, "text", {
-            get: function () {
-                var me = internals.get(this);
+    get text() {
+        const me = internals.get(this);
 
-                return me.input.value;
-            },
-            set: function (value) {
-                var me = internals.get(this);
+        return me.input.value;
+    }
+    set text(value) {
+        const me = internals.get(this);
 
-                me.input.value = value;
+        me.input.value = value;
 
-                onChange.call(this);
-            }
-        });
-        Object.defineProperty(Query.prototype, "results", {
-            get: function () {
-                var me = internals.get(this);
+        onChange.call(this);
+    }
 
-                return me.results;
-            }
-        });
+    get results() {
+        const me = internals.get(this);
 
-        function onChange() {
-            var me = internals.get(this);
+        return me.results;
+    }
+}
 
-            var name = me.input.value;
-            var from = new Date(Number(me.from.value));
-            var to = new Date(Number(me.to.value));
+function onChange() {
+    const me = internals.get(this);
 
-            var isRoot = visit => visit.isRoot;
-            var descendants = visit => visit.descendants.size;
-            var descending = (a, b) => b - a;
+    const name = me.input.value;
+    const from = new Date(Number(me.from.value));
+    const to = new Date(Number(me.to.value));
 
-            var interestingVisits = [...me.db.visits.values()]
-                .filter(v => v.history.name.contains(name))
-                .filter(v => v.created > from)
-                .filter(v => v.created < to)
-                .map(v => v.root)
-                .distinct
-                .orderBy(descendants, descending);
+    const isRoot = visit => visit.isRoot;
+    const descendants = visit => visit.descendants.size;
+    const descending = (a, b) => b - a;
 
-            me.results = new Set(interestingVisits);
+    const interestingVisits = [...me.db.visits.values()]
+        .filter(v => v.history.name.contains(name))
+        .filter(v => v.created > from)
+        .filter(v => v.created < to)
+        .map(v => v.root)
+        .distinct
+        .orderBy(descendants, descending);
 
-            this.dispatchEvent(new Event("change"));
-        }
+    me.results = new Set(interestingVisits);
 
-        document.registerElement("ChromeHistory-Query", Query);
-    });
-})(document.currentScript);
+    this.dispatchEvent(new Event("change"));
+}
+
+window.customElements.define("chromehistory-query", Query);

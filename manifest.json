@@ -1,21 +1,22 @@
 {
-    "manifest_version": 2,
+  "manifest_version": 2,
 
-    "name": "Wikipedia navigation visualizer",
-    "description": "This extension visualizes Wikipedia navigation",
-    "version": "0.1",
+  "name": "Wikipedia navigation visualizer",
+  "description": "This extension visualizes Wikipedia navigation",
+  "version": "0.1",
 
-    "browser_action": {
-        "default_icon": "images/default_icon.png",
-        "default_title": "default_title"
-    },
-    "background": {
-        "persistent": false,
-        "scripts": [
-            "scripts/app/init.js"
-        ]
-    },
-    "permissions": [
-        "history"
+  "browser_action": {
+    "default_icon": "images/default_icon.png",
+    "default_title": "default_title"
+  },
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "scripts/app/init.js"
     ]
+  },
+  "permissions": [
+    "history"
+  ],
+  "content_security_policy": "script-src 'self' https://d3js.org; object-src 'self'"
 }

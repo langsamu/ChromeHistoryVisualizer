@@ -1,59 +1,46 @@
-﻿(function (currentScript) {
-    require(["DB"], function (DB) {
-        "use strict";
+﻿import { default as DB } from "../../app/DB.js";
 
-        var internals = new WeakMap;
+var internals = new WeakMap;
 
-        class Controller extends HTMLElement {
-            createdCallback() {
-                var shadow = this.createShadowRoot();
+export default class Controller extends HTMLElement {
+    async connectedCallback() {
+        const response = await fetch("scripts/components/Controller/index.html");
+        this.attachShadow({ mode: "closed" }).innerHTML = await response.text();
 
-                var template = currentScript.ownerDocument.querySelector("template");
-                var clone = document.importNode(template.content, true);
+        this.query.addEventListener("change", change.bind(this));
+        this.select.addEventListener("selectedVisitChanged", selectedVisitChanged.bind(this));
 
-                shadow.appendChild(clone);
+        new DB("wikipedia.org/wiki", dbReady.bind(this), dbProgress.bind(this));
+    }
 
-                this.query.addEventListener("change", change.bind(this));
-                this.select.addEventListener("selectedVisitChanged", selectedVisitChanged.bind(this));
-                
-                new DB("wikipedia.org/wiki", dbReady.bind(this), dbProgress.bind(this));
-            }
-        }
+    get query() {
+        return document.getElementById(this.getAttribute("query"));
+    }
 
-        Object.defineProperty(Controller.prototype, "query", {
-            get: function () {
-                return document.getElementById(this.getAttribute("query"));
-            }
-        });
-        Object.defineProperty(Controller.prototype, "select", {
-            get: function () {
-                return document.getElementById(this.getAttribute("select"));
-            }
-        });
-        Object.defineProperty(Controller.prototype, "tree", {
-            get: function () {
-                return document.getElementById(this.getAttribute("tree"));
-            }
-        });
-        Object.defineProperty(Controller.prototype, "progress", {
-            get: function () {
-                return document.getElementById(this.getAttribute("progress"));
-            }
-        });
+    get select() {
+        return document.getElementById(this.getAttribute("select"));
+    }
 
-        function change() {
-            this.select.visits = this.query.results;
-        }
-        function selectedVisitChanged() {
-            this.tree.visit = this.select.selectedVisit;
-        }
-        function dbReady(db) {
-            this.query.db = db;
-        }
-        function dbProgress(value) {
-            this.progress.value = value;
-        }
+    get tree() {
+        return document.getElementById(this.getAttribute("tree"));
+    }
 
-        document.registerElement("ChromeHistory-Controller", Controller);
-    });
-})(document.currentScript);
+    get progress() {
+        return document.getElementById(this.getAttribute("progress"));
+    }
+}
+
+function change() {
+    this.select.visits = this.query.results;
+}
+function selectedVisitChanged() {
+    this.tree.visit = this.select.selectedVisit;
+}
+function dbReady(db) {
+    this.query.db = db;
+}
+function dbProgress(value) {
+    this.progress.value = value;
+}
+
+window.customElements.define("chromehistory-controller", Controller);

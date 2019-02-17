@@ -1,55 +1,45 @@
-﻿define(["utils"], function () {
-    "use strict";
+﻿var internals = new WeakMap;
 
-    var internals = new WeakMap;
+export default class VisitMap extends Map {
+    constructor() {
+        super();
 
-    class VisitMap extends Map {
-        constructor() {
-            super();
-
-            internals.set(this, {});
-        }
+        internals.set(this, {});
     }
 
-    Object.defineProperty(VisitMap.prototype, "byParent", {
-        get: function () {
-            var me = internals.get(this);
+    get byParent() {
+        const me = internals.get(this);
 
-            if (!me.byParent) {
-                var visits = [...this.values()];
+        if (!me.byParent) {
+            const visits = [...this.values()];
 
-                me.byParent = visits.groupBy(visit => visit.parentId);
-            }
-
-            return me.byParent;
+            me.byParent = visits.groupBy(visit => visit.parentId);
         }
-    });
-    Object.defineProperty(VisitMap.prototype, "byHistory", {
-        get: function () {
-            var me = internals.get(this);
 
-            if (!me.byHistory) {
-                var visits = [...this.values()];
+        return me.byParent;
+    }
 
-                me.byHistory = visits.groupBy(visit => visit.historyId);
-            }
+    get byHistory() {
+        const me = internals.get(this);
 
-            return me.byHistory;
+        if (!me.byHistory) {
+            const visits = [...this.values()];
+
+            me.byHistory = visits.groupBy(visit => visit.historyId);
         }
-    });
-    Object.defineProperty(VisitMap.prototype, "byHistoryAndParent", {
-        get: function () {
-            var me = internals.get(this);
 
-            if (!me.byHistoryAndParent) {
-                var visits = [...this.values()];
+        return me.byHistory;
+    }
 
-                me.byHistoryAndParent = visits.groupBy(visit => visit.historyAndParent);
-            }
+    get byHistoryAndParent() {
+        const me = internals.get(this);
 
-            return me.byHistoryAndParent;
+        if (!me.byHistoryAndParent) {
+            const visits = [...this.values()];
+
+            me.byHistoryAndParent = visits.groupBy(visit => visit.historyAndParent);
         }
-    });
 
-    return VisitMap;
-});
+        return me.byHistoryAndParent;
+    }
+}
